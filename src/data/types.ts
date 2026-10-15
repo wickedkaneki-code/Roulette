@@ -11,6 +11,7 @@ export type Building =
   | 'The Annex'
   | 'Sky Garden'
   | 'North Towers'
+  | 'North Link'
   | 'Terminal'
   | 'Interior Zone'
   | 'TBA'
@@ -19,7 +20,9 @@ export type Price = 1 | 2 | 3 | 4
 
 /** Each factor is 0–10. */
 export interface Scores {
-  /** Diner sentiment: Google/Tripadvisor/Yelp ratings and review buzz. */
+  /** How good the food is, from food coverage and what people post about it. */
+  taste: number
+  /** Overall diner ratings: Tripadvisor/Yelp/Klook stars and review buzz. */
   reviews: number
   /** Interior, ambience and photo-worthiness. */
   aesthetic: number
@@ -69,6 +72,7 @@ export const KIND_EMOJI: Record<Kind, string> = {
 }
 
 export const FACTOR_LABELS: Record<Factor, string> = {
+  taste: 'Taste',
   reviews: 'Reviews',
   aesthetic: 'Aesthetic',
   notoriety: 'Notoriety',

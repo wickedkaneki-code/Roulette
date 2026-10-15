@@ -12,8 +12,10 @@ export interface Settings {
   buildings: Building[]
   maxPrice: Price
   includeAnnounced: boolean
-  /** Blend Yelp/Klook star ratings into the reviews score where available. */
+  /** Blend Tripadvisor/Yelp/Klook star ratings into the reviews score where available. */
   useExternalReviews: boolean
+  /** Let social media posts move the taste and aesthetic scores. */
+  useSocial: boolean
   /** Places the user vetoed; they never land. */
   vetoed: string[]
 }
@@ -28,16 +30,17 @@ export interface Entry {
   probability: number
 }
 
-export const FACTORS: Factor[] = ['reviews', 'aesthetic', 'notoriety']
+export const FACTORS: Factor[] = ['taste', 'aesthetic', 'reviews', 'notoriety']
 
 export const DEFAULT_SETTINGS: Settings = {
-  weights: { reviews: 50, aesthetic: 25, notoriety: 25 },
+  weights: { taste: 40, aesthetic: 35, reviews: 15, notoriety: 10 },
   favoritism: 3,
   kinds: ['restaurant', 'buffet', 'fastfood', 'cafe'],
   buildings: [],
   maxPrice: 4,
   includeAnnounced: false,
   useExternalReviews: true,
+  useSocial: true,
   vetoed: [],
 }
 

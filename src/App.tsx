@@ -6,15 +6,18 @@ import { ResultCard } from './components/ResultCard'
 import { Wheel } from './components/Wheel'
 import { PLACES } from './data/places'
 import { EXTERNAL_RATINGS, REVIEWS_CAPTURED } from './data/reviews'
+import { SOCIAL } from './data/social'
 import { SOURCES } from './data/sources'
 import type { Kind } from './data/types'
 import { buildSlices, percent, shortLocation } from './lib/format'
 import { computeOdds, DEFAULT_SETTINGS, secureRandom, weightedPick, type Entry, type Settings } from './lib/odds'
 import { withExternalReviews } from './lib/reviews'
+import { withSocialSignals } from './lib/social'
 import { load, save } from './lib/storage'
 import { landingAngle, rotationToLand } from './lib/wheel'
 
-const SETTINGS_KEY = 'smnorth-roulette:settings:v1'
+// v2 added the taste factor; older saved weights don't have it.
+const SETTINGS_KEY = 'smnorth-roulette:settings:v2'
 const HISTORY_KEY = 'smnorth-roulette:history:v1'
 
 interface HistoryItem {
@@ -34,9 +37,20 @@ const KIND_COUNTS = PLACES.reduce(
 )
 const ANNOUNCED = PLACES.filter((p) => p.status === 'announced').length
 const NEW_COUNT = PLACES.filter((p) => p.status === 'new').length
-const BLENDED_PLACES = withExternalReviews(PLACES)
 const RATED_COUNT = Object.keys(EXTERNAL_RATINGS).length
-const placesFor = (s: Settings) => (s.useExternalReviews ? BLENDED_PLACES : PLACES)
+const SOCIAL_COUNT = Object.keys(SOCIAL).length
+const VARIANTS = new Map<string, typeof PLACES>()
+const placesFor = (s: Settings) => {
+  const key = `${s.useExternalReviews}-${s.useSocial}`
+  let places = VARIANTS.get(key)
+  if (!places) {
+    places = PLACES
+    if (s.useExternalReviews) places = withExternalReviews(places)
+    if (s.useSocial) places = withSocialSignals(places)
+    VARIANTS.set(key, places)
+  }
+  return places
+}
 
 export default function App() {
   const [settings, setSettings] = useState<Settings>(() => load(SETTINGS_KEY, DEFAULT_SETTINGS))
@@ -131,8 +145,8 @@ export default function App() {
         <h1>SM North Food Roulette</h1>
         <p className="lede">
           Every café and restaurant in SM City North EDSA on one wheel: {PLACES.length} spots across City Center, The
-          Block, The Annex, Sky Garden and North Towers, including {NEW_COUNT} that opened in 2025–26. Better reviews,
-          prettier rooms and bigger names get bigger slices.
+          Block, The Annex, Sky Garden and North Towers, including {NEW_COUNT} that opened in 2025–26. Food people rave
+          about and rooms worth photographing get the biggest slices.
         </p>
       </header>
 
@@ -165,6 +179,7 @@ export default function App() {
               entry={result}
               ticket={ticket}
               blended={settings.useExternalReviews}
+              social={settings.useSocial}
               onSpinAgain={spin}
               onVeto={vetoAndRespin}
             />
@@ -199,6 +214,7 @@ export default function App() {
             kindCounts={KIND_COUNTS}
             announcedCount={ANNOUNCED}
             ratedCount={RATED_COUNT}
+            socialCount={SOCIAL_COUNT}
             disabled={spinning}
             onChange={setSettings}
           />
@@ -209,20 +225,26 @@ export default function App() {
       <footer className="method">
         <h3>How the odds work</h3>
         <p>
-          Each place has three scores from 0 to 10. <strong>Reviews</strong> starts as an estimate from diner
-          ratings and food-media coverage. For the {RATED_COUNT} places with their own SM North listing on
-          Tripadvisor, Yelp or Klook, those star ratings are blended in: a rating at the site’s typical average counts
-          as 6, and the more reviews behind it, the more it outweighs the estimate. Reviews written mostly before 2020
-          count for less. <strong>Aesthetic</strong> rates the room and how photogenic it is.{' '}
-          <strong>Notoriety</strong> covers brand fame, awards such as the 2026 MICHELIN Guide Philippines, and
-          first-in-the-Philippines hype. Your sliders blend them into one weighted score, and a place’s slice is
-          proportional to (score ÷ 10) raised to the favoritism power. At ×0 every slice is equal.
+          Each place has four scores from 0 to 10. <strong>Taste</strong> is how good the food is and{' '}
+          <strong>aesthetic</strong> is how good the room looks; by default these two count most.{' '}
+          <strong>Reviews</strong> is the overall star rating, and <strong>notoriety</strong> covers brand fame,
+          awards such as the 2026 MICHELIN Guide Philippines, and first-in-the-Philippines hype. Your sliders blend
+          them into one weighted score, and a place’s slice is proportional to (score ÷ 10) raised to the favoritism
+          power. At ×0 every slice is equal.
+        </p>
+        <p>
+          Every score starts as a researched estimate. For the {SOCIAL_COUNT} places creators have posted about on
+          TikTok, YouTube, Instagram or Facebook, each post moves taste or aesthetic by its tone: a rave counts more
+          than a nod, and a negative post subtracts. Posts by the restaurant or the mall count less than independent
+          creators, older posts count less, and no place moves more than 2 points. For the {RATED_COUNT} places with
+          their own SM North listing on Tripadvisor, Yelp or Klook, those star ratings are blended into reviews: a
+          rating at the site’s typical average counts as 6, more reviews outweigh the estimate more, and reviews
+          written mostly before 2020 count less.
         </p>
         <p>
           The list of places comes from SM Supermalls’ official SM City North EDSA directory (checked 15 Oct 2026),
-          plus openings reported through October 2026. Tripadvisor, Yelp and Klook ratings were captured on {REVIEWS_CAPTURED}.
-          The remaining scores are researched estimates, not live ratings, and mall
-          tenants change often, so check a place is open before you go.
+          plus openings reported through October 2026. Review-site ratings and social posts were captured on{' '}
+          {REVIEWS_CAPTURED}. Mall tenants change often, so check a place is open before you go.
         </p>
         <h4>Sources</h4>
         <ul className="sources">

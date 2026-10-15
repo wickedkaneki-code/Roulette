@@ -9,6 +9,9 @@ import type { Building, Kind, Location, Place, Price, Status } from './types'
  * Scores are 0–10 editorial estimates, not scraped numbers:
  *  - reviews:   diner sentiment from Google/Tripadvisor/Yelp aggregates and
  *               food-media coverage, mapped roughly 4.7★→9, 4.3★→7, 4.0★→6, 3.6★→4.
+ *  - taste:     the food itself; defaults to the reviews estimate unless a
+ *               place's food is known to beat or trail its overall ratings.
+ *               Social media posts then move it (see src/data/social.ts).
  *  - aesthetic: 9–10 destination interiors, 7–8 stylish dining room,
  *               5–6 standard chain, 3–4 basic counter, 1–2 stall/kiosk.
  *  - notoriety: 9–10 icons / Michelin-linked / first-in-PH hype,
@@ -21,6 +24,7 @@ const BUILDINGS: Record<string, Building> = {
   ANX: 'The Annex',
   SKY: 'Sky Garden',
   NT: 'North Towers',
+  NL: 'North Link',
   TRM: 'Terminal',
   IZ: 'Interior Zone',
   TBA: 'TBA',
@@ -60,6 +64,8 @@ function slug(name: string): string {
 }
 
 interface Extra {
+  /** Taste estimate when it differs from the reviews estimate. */
+  taste?: number
   tags?: string[]
   status?: Status
   src?: SourceId[]
@@ -84,7 +90,7 @@ function P(
     cuisine,
     locations: parseLocations(locs),
     price,
-    scores: { reviews, aesthetic, notoriety },
+    scores: { taste: extra.taste ?? reviews, reviews, aesthetic, notoriety },
     blurb,
     tags: extra.tags ?? [],
     status: extra.status ?? 'open',
@@ -118,7 +124,7 @@ export const PLACES: Place[] = [
   P('Ramen Kuroda', 'restaurant', 'Japanese ramen', 'BLK:UG', 2, 7, 5, 5, 'Affordable tonkotsu ramen with a loyal following.', { src: ['smdir', 'rqc2026'] }),
   P('Kimono Ken', 'restaurant', 'Japanese fusion', 'BLK:3F', 2, 7, 6, 5, 'Contemporary Japanese-fusion menu — sushi, ramen, donburi.', { src: ['smdir', 'rqc2026'] }),
   P('Tonkotsu Kazan', 'restaurant', 'Japanese ramen', 'BLK:GF', 2, 8, 6, 7, 'Rich tonkotsu ramen house that opened at The Block in 2025.', { status: 'new', src: ['sm2025jan'] }),
-  P('Gyukatsu Kyoto Katsugyu', 'restaurant', 'Japanese gyukatsu', 'CC:2F', 3, 8, 7, 8, 'Kyoto beef cutlets you finish on a sizzling stone grill at the table.', { status: 'new', src: ['sm2025jan'] }),
+  P('Gyukatsu Kyoto Katsugyu', 'restaurant', 'Japanese gyukatsu', 'CC:2F', 3, 8, 7, 8, 'Kyoto beef cutlets you finish on a sizzling stone grill at the table.', { status: 'new', taste: 9, src: ['sm2025jan'] }),
   P('Mesa Filipino Moderne', 'restaurant', 'Modern Filipino', 'CC:3F', 3, 8, 7, 7, 'Famous crispy pata and "Filipino moderne" plating.'),
   P('Cabalen', 'buffet', 'Kapampangan buffet', 'CC:3F', 2, 7, 5, 7, 'Unlimited Kapampangan favorites — kare-kare, pinakbet, lechon kawali.', { src: ['smdir', 'eatigo2026'] }),
   P('Mister Kabab', 'restaurant', 'Middle Eastern', 'CC:3F', 2, 8, 5, 5, 'Generous kebab platters, biryani and hummus.'),
@@ -147,7 +153,7 @@ export const PLACES: Place[] = [
   P('Classic Savory', 'restaurant', 'Chinese-Filipino', 'ANX:2F', 2, 7, 5, 7, 'Since the 1960s — lomi and special-recipe fried chicken.', { src: ['smdir', 'eatigo2026'] }),
   P('Mangan', 'restaurant', 'Filipino', 'ANX:2F', 2, 7, 6, 6, 'All-Filipino menu — sinigang, kare-kare, crispy pata.'),
   P('Tres', 'restaurant', 'Filipino · kare-kare', 'ANX:2F', 2, 7, 5, 4, 'Claims the best kare-kare in Metro Manila.'),
-  P('Magure Restaurant', 'restaurant', 'Restaurant (concept not published)', 'ANX:2F', 2, 5, 5, 2, 'Listed in SM\'s directory without a description — explore and report back.'),
+  P('Magure Izakaya', 'restaurant', 'Japanese izakaya', 'ANX:2F', 2, 7, 7, 5, 'Affordable izakaya (opened July 2024) known for its 50 cm sushi roll and Japan-like room.', { src: ['smdir', 'social'] }),
   P('Lechon Haus', 'restaurant', 'Filipino lechon', 'ANX:UG', 2, 6, 4, 3, 'Family Filipino restaurant built around lechon.'),
   P('Lechoneria', 'restaurant', 'Filipino lechon belly', 'CC:2F', 2, 6, 4, 4, 'Lechon belly and Filipino favorites.'),
   P('Gangji Produced Hongkong Café', 'restaurant', 'Hong Kong café', 'ANX:UG', 2, 7, 5, 4, 'HK-style cha chaan teng: baked rice, milk tea, pineapple buns.'),
@@ -155,7 +161,7 @@ export const PLACES: Place[] = [
   P('Pizza Planet', 'restaurant', 'Pizza', 'ANX:UG', 2, 7, 9, 7, 'Sci-fi interiors "like a Kubrick–Lucas passion project"; stretchy-cheese pies.', { status: 'new', tags: [GRAM], src: ['sm2026feb', 'mega2026'] }),
   P('Gerry\'s Restaurant', 'restaurant', 'Filipino grill', 'SKY:2F', 3, 8, 6, 8, 'Inihaw na tuna belly, sisig and crispy pata.', { src: ['smdir', 'rqc2026'] }),
   P('Giligan\'s Restaurant', 'restaurant', 'Filipino', 'SKY:2F', 2, 7, 6, 6, 'Sizzling sisig and grilled seafood.'),
-  P('Café JangGeum', 'restaurant', 'Korean café-restaurant', 'SKY:2F', 2, 7, 6, 5, 'Korean comfort food in a photo-friendly space.'),
+  P('Café JangGeum', 'cafe', 'Korean café', 'SKY:2F', 2, 7, 7, 5, 'Korean café with dalgona, tanghulu and bungeoppang in a photo-friendly room.', { tags: [GRAM], src: ['smdir', 'social'] }),
   P('Icebergs', 'restaurant', 'Comfort food & halo-halo', 'SKY:2F', 2, 7, 5, 6, '"Home of the super halo-halo" plus pasta and rice meals.'),
   P('Makimura Ramen Bar', 'restaurant', 'Japanese ramen', 'SKY:2F', 2, 7, 5, 4, 'Ramen bar at the open-air Sky Garden.'),
   P('Scorched Smokehouse', 'restaurant', 'American BBQ', 'SKY:2F', 2, 7, 6, 4, 'Smoked meats and BBQ platters.'),
@@ -174,6 +180,14 @@ export const PLACES: Place[] = [
   P('Fat Fook Taiwanese Kitchen', 'restaurant', 'Taiwanese', 'TBA:?', 2, 8, 5, 6, 'Braised pork rice, xiao long bao, crispy chicken chop.', { src: ['eatigo2026', 'booky'] }),
   P('BHC Chicken', 'restaurant', 'Korean fried chicken', 'CC:UG', 2, 8, 7, 10, 'Korea\'s K-drama-famous chicken — first PH branch, opened 2026. Try Bburinkle.', { status: 'new', tags: [FIRST_PH], src: ['koreatimes2026', 'sm2026may', 'tribune2026'] }),
 
+  // Found through 2024–2026 social media posts; not yet in SM's directory
+  P('RICH Bistro', 'restaurant', 'Indian', 'BLK:5F', 3, 7, 7, 5, 'Premium Indian on The Block\'s 5th level; creators single out the butter chicken.', { status: 'new', src: ['social'] }),
+  P('BB.Q Chicken', 'restaurant', 'Korean fried chicken', 'BLK:?', 2, 7, 6, 8, 'Korea\'s other big fried-chicken chain, new at The Block in 2026.', { status: 'new', src: ['social'] }),
+  P('Katsudonya Saiko', 'restaurant', 'Japanese katsudon', 'CC:2F', 2, 8, 6, 7, 'Katsudon specialist from BGC; crispy katsudon sets big enough for two.', { status: 'new', src: ['social'] }),
+  P('Niku Niku Oh Kome', 'restaurant', 'Japanese hamburg steak', 'TBA:?', 3, 8, 7, 7, 'Tokyo hamburg-steak shop; ₱599 gets two beefy hamburgs.', { status: 'new', src: ['social'] }),
+  P('Ninepot', 'restaurant', 'Taiwanese-style hotpot sets', 'TBA:?', 3, 7, 6, 4, '₱690 hotpot sets — try the sesame-oil or seasonal mala milk broth.', { status: 'new', src: ['social'] }),
+  P('Happy Birthday Food Center', 'fastfood', 'Filipino party food', 'TBA:?', 1, 6, 5, 3, 'Kiddie-party classics: sweet spaghetti, fried chicken, lumpia.', { status: 'new', src: ['social'] }),
+
   // Announced but not confirmed open
   P('Azela by Balay Dako', 'restaurant', 'Filipino heritage', 'BLK:2F', 3, 8, 8, 8, 'From the team behind Tagaytay\'s Balay Dako — kare-kare and kansi.', { status: 'announced', src: ['sm2026apr'] }),
   P('Royal Indian Curry House Bistro', 'restaurant', 'Indian', 'BLK:5F', 2, 7, 6, 5, 'Murgh makhani and Hyderabadi biryani.', { status: 'announced', src: ['sm2026feb'] }),
@@ -189,6 +203,11 @@ export const PLACES: Place[] = [
   P('Romantic Baboy', 'buffet', 'Unlimited samgyupsal', 'SKY:2F', 2, 7, 5, 8, 'The samgyup chain that started the unlimited-pork craze.'),
   P('Samgyeopmasarap', 'buffet', 'Unlimited Korean BBQ', 'NT:UG', 2, 7, 4, 7, 'Budget unlimited Korean BBQ.'),
   P('Sumo Niku', 'buffet', 'Unlimited Japanese yakiniku', 'NT:2F', 3, 5, 5, 5, 'Unlimited yakiniku with Japanese cuts.', { src: ['smdir', 'rqc2026'] }),
+  P('The Eight International Buffet', 'buffet', 'International buffet', 'BLK:5F', 4, 7, 8, 7, 'The 2026 newcomer creators keep pitting against Vikings; ₱1,188–1,388.', { status: 'new', src: ['social'] }),
+  P('Lan Hot Pot', 'buffet', 'Unlimited hotpot & grill', 'ANX:?', 3, 7, 6, 6, 'Unlimited hotpot with meat, seafood and fried bites from ₱799.', { status: 'new', src: ['social'] }),
+  P('Feast & Fire', 'buffet', 'Unlimited ramen, samgyup & buffet', 'ANX:2F', 2, 6, 5, 4, 'Four-in-one unlimited menu — ramen, samgyup, skewers, wings — plus a buffet.', { src: ['social'] }),
+  P('Yakimix', 'buffet', 'Japanese-Korean buffet', 'TBA:UG', 3, 6, 5, 7, 'Grill-it-yourself buffet with sushi and Korean dishes.', { src: ['social'] }),
+  P('Catch \'N Hatch', 'buffet', 'Unlimited wings & seafood', 'TBA:?', 2, 6, 5, 3, 'Unlimited wings and seafood boils.', { src: ['social'] }),
   P('Many Unlimited Topokki Buffet', 'buffet', 'Korean tteokbokki buffet', 'ANX:3F', 2, 6, 4, 4, 'Build-your-own unlimited tteokbokki pot.'),
 
   // ───────────── Cafés & coffee ─────────────
@@ -220,7 +239,14 @@ export const PLACES: Place[] = [
   P('Vizco\'s Restaurant & Cake Shop', 'cafe', 'Baguio cake shop', 'ANX:UG', 2, 8, 5, 7, 'Baguio\'s famous strawberry shortcake.'),
   P('New Bistro Deli', 'cafe', 'Sandwiches & coffee', 'ANX:LG', 1, 6, 4, 3, 'Handcrafted sandwiches for quick snacks.'),
   P('The Sandwich Guy', 'cafe', 'Healthy sandwiches', 'NT:3F', 2, 8, 5, 5, 'Hearty, health-conscious sandwiches and salads.'),
-  P('Calle Cafe', 'cafe', 'Café & comfort food', 'BLK:GF', 2, 6, 6, 4, 'New café spot announced for The Block ground level.', { status: 'announced', src: ['sm2026may'] }),
+  P('Hoshino Coffee', 'cafe', 'Japanese coffee & meals', 'TBA:?', 2, 7, 7, 6, 'Hand-drip coffee, soufflé pancakes and hearty meals in a cozy room.', { status: 'new', src: ['social'] }),
+  P('Craft Coffee Roastery', 'cafe', 'Specialty coffee', 'SKY:2F', 2, 8, 6, 5, 'Roastery café that landed at Sky Garden in 2025; get the café mocha.', { status: 'new', tags: [WORK], src: ['social'] }),
+  P('Egghouse', 'cafe', 'Egg sandwiches & coffee', 'TBA:?', 2, 7, 7, 4, 'On SM North\'s own list of aesthetic cafés.', { src: ['social'] }),
+  P('Kofi Addict', 'cafe', 'Coffee', 'TBA:?', 1, 6, 7, 3, 'On SM North\'s own list of aesthetic cafés.', { src: ['social'] }),
+  P('Black Scoop Cafe', 'cafe', 'Coffee & desserts', 'TBA:?', 1, 6, 5, 5, 'Budget coffee and ice-cream drinks.', { src: ['social'] }),
+  P('1000cc Coffee', 'cafe', '24-hour coffee', 'NL:?', 1, 6, 5, 3, 'Open 24 hours on the North Link access road.', { src: ['social'] }),
+  P('More Coffee', 'cafe', 'Coffee & matcha', 'BLK:FH', 1, 6, 4, 3, 'Coffee and matcha stall in The Block\'s 4th-floor food hall.', { src: ['social'] }),
+  P('Calle Cafe', 'cafe', 'Specialty coffee', 'BLK:GF', 2, 7, 8, 5, 'Cave-themed café open 8am–2am; try the Nocturne Spice cold brew.', { status: 'new', tags: [GRAM], src: ['sm2026may', 'social'] }),
 
   // ───────────── Fast food & food court ─────────────
   P('Jollibee', 'fastfood', 'Filipino fast food', 'CC:UG', 1, 7, 4, 10, 'Chickenjoy and Jolly Spaghetti — the national icon.'),
@@ -310,6 +336,11 @@ export const PLACES: Place[] = [
   P('Mochi Mama', 'dessert', 'Mochi', 'SKY:2F', 1, 6, 4, 4, 'Mochi and Japanese sweets.'),
   P('Avocadoria.ph', 'dessert', 'Avocado desserts', 'SKY:2F', 1, 7, 4, 4, 'Avocado ice cream and shakes from Chef Czarina Jagto-Sevilla.'),
   P('McDonald\'s Dessert Center', 'dessert', 'Soft serve', 'CC:OUT', 1, 6, 2, 6, 'Sundaes, McFlurry and cones.'),
+  P('Udders Ice Cream', 'dessert', 'Singaporean ice cream', 'TBA:?', 1, 7, 5, 6, 'Singapore\'s cult ice-cream brand, with boozy and local flavors.', { src: ['social'] }),
+  P('Manila Creamery', 'dessert', 'Ice cream', 'CC:UG', 1, 7, 5, 6, 'Local premium ice cream; on SM North\'s must-try sweets list.', { src: ['social'] }),
+  P('The Buzz Ice Cream', 'dessert', 'Ice cream', 'CC:UG', 1, 6, 4, 3, 'On SM North\'s must-try sweets list.', { src: ['social'] }),
+  P('Hi Halo', 'dessert', 'Halo-halo', 'NT:GF', 1, 6, 4, 4, 'Halo-halo stop at North Towers.', { src: ['social'] }),
+  P('Liège Manila', 'dessert', 'Liège waffles', 'BLK:FH', 1, 7, 4, 4, 'Caramelized Liège waffles in The Block food hall.', { src: ['social'] }),
   P('Sweetblooms', 'dessert', 'Sweets (concept not published)', 'CC:LG', 1, 5, 3, 2, 'Listed in SM\'s directory without a description.'),
 
   // ───────────── Milk tea & drinks ─────────────

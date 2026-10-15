@@ -4,9 +4,10 @@ import { DEFAULT_SETTINGS, FACTORS, spread, topShare, type Entry, type Settings,
 import { percent } from '../lib/format'
 
 const FACTOR_HINTS: Record<Factor, string> = {
-  reviews: 'Diner ratings, incl. Tripadvisor, Yelp, Klook',
-  aesthetic: 'Interiors, ambience, photo-worthiness',
-  notoriety: 'Brand fame, awards, hype, first-in-PH',
+  taste: 'The food, incl. TikTok, YouTube, IG, Facebook posts',
+  aesthetic: 'Interiors and photo-worthiness, incl. social posts',
+  reviews: 'Star ratings on Tripadvisor, Yelp, Klook',
+  notoriety: 'Brand fame, awards, first-in-PH hype',
 }
 
 interface Preset {
@@ -17,15 +18,16 @@ interface Preset {
 }
 
 const PRESETS: Preset[] = [
-  { id: 'balanced', label: 'Balanced', weights: DEFAULT_SETTINGS.weights, favoritism: DEFAULT_SETTINGS.favoritism },
-  { id: 'foodie', label: 'Foodie', weights: { reviews: 80, aesthetic: 5, notoriety: 15 }, favoritism: 4 },
-  { id: 'gram', label: 'For the ’gram', weights: { reviews: 20, aesthetic: 70, notoriety: 10 }, favoritism: 4 },
-  { id: 'hype', label: 'Hype hunter', weights: { reviews: 20, aesthetic: 10, notoriety: 70 }, favoritism: 4 },
+  { id: 'taste-looks', label: 'Taste & looks', weights: DEFAULT_SETTINGS.weights, favoritism: DEFAULT_SETTINGS.favoritism },
+  { id: 'foodie', label: 'Foodie', weights: { taste: 70, aesthetic: 5, reviews: 20, notoriety: 5 }, favoritism: 4 },
+  { id: 'gram', label: 'For the ’gram', weights: { taste: 20, aesthetic: 70, reviews: 5, notoriety: 5 }, favoritism: 4 },
+  { id: 'crowd', label: 'Crowd favorite', weights: { taste: 20, aesthetic: 10, reviews: 60, notoriety: 10 }, favoritism: 4 },
+  { id: 'hype', label: 'Hype hunter', weights: { taste: 20, aesthetic: 15, reviews: 5, notoriety: 60 }, favoritism: 4 },
   { id: 'luck', label: 'Pure luck', weights: DEFAULT_SETTINGS.weights, favoritism: 0 },
 ]
 
 const KINDS: Kind[] = ['restaurant', 'buffet', 'fastfood', 'cafe', 'dessert', 'drinks', 'kiosk']
-const BUILDINGS: Building[] = ['City Center', 'The Block', 'The Annex', 'Sky Garden', 'North Towers', 'Interior Zone', 'Terminal']
+const BUILDINGS: Building[] = ['City Center', 'The Block', 'The Annex', 'Sky Garden', 'North Towers', 'North Link', 'Interior Zone', 'Terminal']
 const PRICES: Price[] = [1, 2, 3, 4]
 
 interface Props {
@@ -34,11 +36,12 @@ interface Props {
   kindCounts: Record<Kind, number>
   announcedCount: number
   ratedCount: number
+  socialCount: number
   disabled: boolean
   onChange: (next: Settings) => void
 }
 
-export function Controls({ settings, odds, kindCounts, announcedCount, ratedCount, disabled, onChange }: Props) {
+export function Controls({ settings, odds, kindCounts, announcedCount, ratedCount, socialCount, disabled, onChange }: Props) {
   const set = (patch: Partial<Settings>) => onChange({ ...settings, ...patch })
   const totalWeight = FACTORS.reduce((s, f) => s + settings.weights[f], 0)
   const activePreset = PRESETS.find(
@@ -86,15 +89,6 @@ export function Controls({ settings, odds, kindCounts, announcedCount, ratedCoun
             </output>
           </div>
         ))}
-        <label className="switch" htmlFor="external">
-          <input
-            id="external"
-            type="checkbox"
-            checked={settings.useExternalReviews}
-            onChange={(e) => set({ useExternalReviews: e.target.checked })}
-          />
-          <span>Blend in real Tripadvisor, Yelp &amp; Klook ratings ({ratedCount} places)</span>
-        </label>
         <div className="slider-row">
           <label htmlFor="favoritism">
             <span className="slider-name">Favoritism</span>
@@ -117,6 +111,24 @@ export function Controls({ settings, odds, kindCounts, announcedCount, ratedCoun
             ×{settings.favoritism}
           </output>
         </div>
+        <label className="switch" htmlFor="external">
+          <input
+            id="external"
+            type="checkbox"
+            checked={settings.useExternalReviews}
+            onChange={(e) => set({ useExternalReviews: e.target.checked })}
+          />
+          <span>Blend in real Tripadvisor, Yelp &amp; Klook ratings ({ratedCount} places)</span>
+        </label>
+        <label className="switch" htmlFor="social">
+          <input
+            id="social"
+            type="checkbox"
+            checked={settings.useSocial}
+            onChange={(e) => set({ useSocial: e.target.checked })}
+          />
+          <span>Let TikTok, YouTube, IG &amp; Facebook posts move taste and aesthetic ({socialCount} places)</span>
+        </label>
       </section>
 
       <section className="panel">

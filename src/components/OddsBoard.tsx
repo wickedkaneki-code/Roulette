@@ -4,6 +4,7 @@ import { KIND_LABELS } from '../data/types'
 import { FACTORS, type Entry } from '../lib/odds'
 import { percent, shortLocation } from '../lib/format'
 import { SITE_LABELS } from '../lib/reviews'
+import { SOCIAL } from '../data/social'
 import { StatusPill } from './StatusPill'
 
 const PAGE = 30
@@ -46,8 +47,8 @@ export function OddsBoard({ odds, disabled, onVeto }: Props) {
         />
       </div>
       <p className="fine">
-        Every place on the wheel, likeliest first. The bars show reviews, aesthetic and notoriety; Tripadvisor, Yelp
-        and Klook badges mark places with their own SM North ratings. Veto a place to take it off the wheel.
+        Every place on the wheel, likeliest first. The bars show taste, aesthetic, reviews and notoriety. Badges mark
+        places with their own SM North ratings and social posts. Veto a place to take it off the wheel.
       </p>
       <ol className="odds-list">
         {visible.map(({ e, rank }) => (
@@ -63,6 +64,11 @@ export function OddsBoard({ odds, disabled, onVeto }: Props) {
                     {SITE_LABELS[r.site]} {r.stars.toFixed(1)}★
                   </span>
                 ))}
+                {SOCIAL[e.place.id] && (
+                  <span className="pill pill-social mono" title="Posts on TikTok, YouTube, Instagram or Facebook">
+                    {SOCIAL[e.place.id].length} {SOCIAL[e.place.id].length === 1 ? 'post' : 'posts'}
+                  </span>
+                )}
               </span>
               <span className="odds-meta">
                 {e.place.cuisine} · {shortLocation(e.place.locations[0])}

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { PLACES } from '../data/places'
 import { EXTERNAL_RATINGS, type ExternalRating } from '../data/reviews'
-import { blendReviews, effectiveCount, PRIOR_WEIGHT, reviewBreakdown, starsToScore, withExternalReviews } from './reviews'
+import { blendReviews, effectiveCount, PRIOR_WEIGHT, reviewBreakdown, starsToScore, TASTE_SHARE, withExternalReviews } from './reviews'
 
 const yelp = (stars: number, count: number, match: 'exact' | 'likely' = 'exact'): ExternalRating => ({
   site: 'yelp',
@@ -83,7 +83,7 @@ describe('external ratings data', () => {
     }
   })
 
-  it('replaces only the reviews score of places with ratings', () => {
+  it('replaces the reviews score and carries part of its move into taste', () => {
     const blended = withExternalReviews(PLACES)
     for (let i = 0; i < PLACES.length; i++) {
       const before = PLACES[i]
@@ -91,7 +91,11 @@ describe('external ratings data', () => {
       expect(after.scores.aesthetic).toBe(before.scores.aesthetic)
       expect(after.scores.notoriety).toBe(before.scores.notoriety)
       if (!EXTERNAL_RATINGS[before.id]) expect(after).toBe(before)
-      else expect(after.scores.reviews).toBe(reviewBreakdown(before).blended)
+      else {
+        const { estimate, blended } = reviewBreakdown(before)
+        expect(after.scores.reviews).toBe(blended)
+        expect(after.scores.taste).toBeCloseTo(before.scores.taste + (blended - estimate) * TASTE_SHARE, 0)
+      }
     }
   })
 })

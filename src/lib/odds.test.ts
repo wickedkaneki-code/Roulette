@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { Place } from '../data/types'
 import { compositeScore, computeOdds, DEFAULT_SETTINGS, pickWeight, topShare, weightedPick, type Settings } from './odds'
 
-function place(id: string, reviews: number, aesthetic: number, notoriety: number, extra: Partial<Place> = {}): Place {
+function place(id: string, reviews: number, aesthetic: number, notoriety: number, extra: Partial<Place> = {}, taste = reviews): Place {
   return {
     id,
     name: id,
@@ -10,7 +10,7 @@ function place(id: string, reviews: number, aesthetic: number, notoriety: number
     cuisine: 'Test',
     locations: [{ building: 'City Center', floor: '2nd floor' }],
     price: 2,
-    scores: { reviews, aesthetic, notoriety },
+    scores: { taste, reviews, aesthetic, notoriety },
     blurb: '',
     tags: [],
     status: 'open',
@@ -23,19 +23,28 @@ const settings = (over: Partial<Settings> = {}): Settings => ({ ...DEFAULT_SETTI
 
 describe('compositeScore', () => {
   it('is the weighted average of the three factors', () => {
-    const p = place('a', 10, 0, 4)
-    expect(compositeScore(p, { reviews: 50, aesthetic: 25, notoriety: 25 })).toBeCloseTo((10 * 50 + 0 + 4 * 25) / 100)
+    const p = place('a', 10, 0, 4, {}, 6)
+    expect(compositeScore(p, { taste: 20, reviews: 40, aesthetic: 20, notoriety: 20 })).toBeCloseTo(
+      (6 * 20 + 10 * 40 + 0 + 4 * 20) / 100,
+    )
   })
 
   it('uses only the ratio between weights', () => {
     const p = place('a', 8, 2, 6)
-    expect(compositeScore(p, { reviews: 2, aesthetic: 1, notoriety: 1 })).toBeCloseTo(
-      compositeScore(p, { reviews: 80, aesthetic: 40, notoriety: 40 }),
+    expect(compositeScore(p, { taste: 1, reviews: 2, aesthetic: 1, notoriety: 1 })).toBeCloseTo(
+      compositeScore(p, { taste: 40, reviews: 80, aesthetic: 40, notoriety: 40 }),
     )
   })
 
   it('treats all-zero weights as neutral', () => {
-    expect(compositeScore(place('a', 10, 10, 10), { reviews: 0, aesthetic: 0, notoriety: 0 })).toBe(5)
+    expect(compositeScore(place('a', 10, 10, 10), { taste: 0, reviews: 0, aesthetic: 0, notoriety: 0 })).toBe(5)
+  })
+})
+
+describe('default emphasis', () => {
+  it('weights taste and aesthetic above reviews and notoriety', () => {
+    const w = DEFAULT_SETTINGS.weights
+    expect(Math.min(w.taste, w.aesthetic)).toBeGreaterThan(Math.max(w.reviews, w.notoriety))
   })
 })
 

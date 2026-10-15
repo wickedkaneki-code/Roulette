@@ -13,11 +13,15 @@ import type { Place } from '../data/types'
  * match is only likely or most reviews are old. The editorial estimate acts
  * as a prior worth PRIOR_WEIGHT reviews, so one stray review nudges a place
  * while hundreds of recent reviews decide it.
+ *
+ * Star ratings are mostly about the food, so TASTE_SHARE of the reviews
+ * score's move carries into taste as well.
  */
 
 export const SITE_BASELINE: Record<ReviewSite, number> = { tripadvisor: 4.0, yelp: 3.8, klook: 4.6 }
 export const POINTS_PER_STAR = 4
 export const PRIOR_WEIGHT = 15
+export const TASTE_SHARE = 0.7
 const LIKELY_MATCH_FACTOR = 0.5
 const ERA_FACTOR = { recent: 1, unknown: 0.75, older: 0.4 }
 
@@ -54,9 +58,12 @@ export function reviewBreakdown(place: Place, table = EXTERNAL_RATINGS): ReviewB
   }
 }
 
-/** Places with their reviews score replaced by the blend, where ratings exist. */
+/** Places with the blended reviews score (and part of its move in taste), where ratings exist. */
 export function withExternalReviews(places: Place[], table = EXTERNAL_RATINGS): Place[] {
-  return places.map((p) =>
-    table[p.id]?.length ? { ...p, scores: { ...p.scores, reviews: reviewBreakdown(p, table).blended } } : p,
-  )
+  return places.map((p) => {
+    if (!table[p.id]?.length) return p
+    const { estimate, blended } = reviewBreakdown(p, table)
+    const taste = Math.round(Math.min(10, Math.max(0, p.scores.taste + (blended - estimate) * TASTE_SHARE)) * 10) / 10
+    return { ...p, scores: { ...p.scores, reviews: blended, taste } }
+  })
 }

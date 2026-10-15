@@ -6,6 +6,7 @@ import type { Entry } from '../lib/odds'
 import { FACTORS } from '../lib/odds'
 import { longLocation, mapsUrl, percent, priceSigns } from '../lib/format'
 import { reviewBreakdown, SITE_LABELS } from '../lib/reviews'
+import { PLATFORM_LABELS, socialBreakdown } from '../lib/social'
 import { StatusPill } from './StatusPill'
 
 interface Props {
@@ -13,14 +14,17 @@ interface Props {
   ticket: number
   /** Whether the reviews score includes Yelp/Klook ratings. */
   blended: boolean
+  /** Whether taste and aesthetic include social media posts. */
+  social: boolean
   onSpinAgain: () => void
   onVeto: () => void
 }
 
-export function ResultCard({ entry, ticket, blended, onSpinAgain, onVeto }: Props) {
+export function ResultCard({ entry, ticket, blended, social, onSpinAgain, onVeto }: Props) {
   const { place, probability, composite } = entry
   const original = PLACES.find((p) => p.id === place.id) ?? place
   const reviews = reviewBreakdown(original)
+  const buzz = socialBreakdown(original)
   return (
     <article className="slip" aria-live="polite">
       <header className="slip-head">
@@ -60,6 +64,42 @@ export function ResultCard({ entry, ticket, blended, onSpinAgain, onVeto }: Prop
             </div>
           ))}
         </dl>
+        <section className="slip-reviews" aria-label="On social media">
+          <h3>On social media</h3>
+          {buzz.posts.length === 0 ? (
+            <p className="fine">
+              No TikTok, YouTube, Instagram or Facebook posts found about this branch, so taste and aesthetic are
+              estimates.
+            </p>
+          ) : (
+            <>
+              <ul>
+                {buzz.posts.map((p) => (
+                  <li key={p.url + p.note}>
+                    <a href={p.url} target="_blank" rel="noreferrer" className="rating-link">
+                      <span className="mono">{PLATFORM_LABELS[p.platform]}</span>{' '}
+                      <span className="fine">
+                        {p.by === 'brand' ? 'restaurant’s own post' : p.by === 'mall' ? 'SM North’s post' : 'creator'}
+                        {p.year && ` · ${p.year}`}
+                      </span>
+                    </a>
+                    <span className="tone-row">
+                      {p.taste && <span className={`pill tone tone-${p.taste}`}>Taste: {p.taste}</span>}
+                      {p.looks && <span className={`pill tone tone-${p.looks}`}>Looks: {p.looks}</span>}
+                    </span>
+                    <span className="rating-note">{p.note}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="fine">
+                {social
+                  ? `Taste ${buzz.taste.adjusted}/10 (estimate ${buzz.taste.estimate}) and aesthetic ${buzz.aesthetic.adjusted}/10 (estimate ${buzz.aesthetic.estimate}) after these posts.`
+                  : `Social posts are switched off, so taste (${buzz.taste.estimate}) and aesthetic (${buzz.aesthetic.estimate}) use the estimates.`}{' '}
+                Notes paraphrase the posts.
+              </p>
+            </>
+          )}
+        </section>
         <section className="slip-reviews" aria-label="What reviewers say">
           <h3>What reviewers say</h3>
           {reviews.ratings.length === 0 ? (

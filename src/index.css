@@ -982,3 +982,45 @@ input[type='search'] {
   color: var(--muted);
   font-weight: 600;
 }
+
+/* ───────── Social posts ───────── */
+
+.mini-taste span { background: var(--k-restaurant); }
+
+.tone-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tone {
+  font-size: 0.7rem;
+  text-transform: capitalize;
+}
+
+.tone-rave {
+  background: var(--good-bg);
+  color: var(--good);
+}
+
+.tone-positive {
+  background: var(--surface);
+  color: var(--good);
+}
+
+.tone-mixed {
+  background: var(--warn-bg);
+  color: var(--warn);
+}
+
+.tone-negative {
+  background: var(--warn-bg);
+  color: var(--k-restaurant);
+}
+
+.pill-social {
+  background: transparent;
+  border: 1px dashed var(--line);
+  color: var(--muted);
+  font-weight: 600;
+}

@@ -97,6 +97,11 @@ export const SOURCES = {
     url: 'https://booky.ph/blog/paris-baguette-manila/',
     date: '2024',
   },
+  social: {
+    label: 'Social media posts — TikTok, YouTube, Instagram, Facebook (linked on each place)',
+    url: 'https://www.tiktok.com/discover/north-edsa-restaurant',
+    date: 'Captured 2026-10-15',
+  },
   tripadvisor: {
     label: 'Tripadvisor — SM City North EDSA branch listings (ratings and review counts)',
     url: 'https://www.tripadvisor.com/RestaurantsNear-g298574-d7116778-SM_City_North_EDSA-Quezon_City_Metro_Manila_Luzon.html',
