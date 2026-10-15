@@ -4,7 +4,7 @@ import { DEFAULT_SETTINGS, FACTORS, spread, topShare, type Entry, type Settings,
 import { percent } from '../lib/format'
 
 const FACTOR_HINTS: Record<Factor, string> = {
-  reviews: 'Diner ratings, incl. Yelp and Klook',
+  reviews: 'Diner ratings, incl. Tripadvisor, Yelp, Klook',
   aesthetic: 'Interiors, ambience, photo-worthiness',
   notoriety: 'Brand fame, awards, hype, first-in-PH',
 }
@@ -93,7 +93,7 @@ export function Controls({ settings, odds, kindCounts, announcedCount, ratedCoun
             checked={settings.useExternalReviews}
             onChange={(e) => set({ useExternalReviews: e.target.checked })}
           />
-          <span>Blend in real Yelp &amp; Klook star ratings ({ratedCount} places)</span>
+          <span>Blend in real Tripadvisor, Yelp &amp; Klook ratings ({ratedCount} places)</span>
         </label>
         <div className="slider-row">
           <label htmlFor="favoritism">

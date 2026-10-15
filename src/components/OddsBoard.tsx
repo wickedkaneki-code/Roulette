@@ -46,8 +46,8 @@ export function OddsBoard({ odds, disabled, onVeto }: Props) {
         />
       </div>
       <p className="fine">
-        Every place on the wheel, likeliest first. The bars show reviews, aesthetic and notoriety; Yelp and Klook
-        badges mark places with their own SM North ratings. Veto a place to take it off the wheel.
+        Every place on the wheel, likeliest first. The bars show reviews, aesthetic and notoriety; Tripadvisor, Yelp
+        and Klook badges mark places with their own SM North ratings. Veto a place to take it off the wheel.
       </p>
       <ol className="odds-list">
         {visible.map(({ e, rank }) => (

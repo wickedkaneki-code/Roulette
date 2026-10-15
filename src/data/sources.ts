@@ -97,6 +97,11 @@ export const SOURCES = {
     url: 'https://booky.ph/blog/paris-baguette-manila/',
     date: '2024',
   },
+  tripadvisor: {
+    label: 'Tripadvisor — SM City North EDSA branch listings (ratings and review counts)',
+    url: 'https://www.tripadvisor.com/RestaurantsNear-g298574-d7116778-SM_City_North_EDSA-Quezon_City_Metro_Manila_Luzon.html',
+    date: 'Captured 2026-10-15',
+  },
   yelp: {
     label: 'Yelp — SM City North EDSA branch listings (star ratings and review counts)',
     url: 'https://www.yelp.com/search?find_desc=Restaurants&find_loc=SM+City+North+EDSA+Annex+1+Tunnel%2C+Quezon+City%2C+Metro+Manila',

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { PLACES } from '../data/places'
 import { EXTERNAL_RATINGS, type ExternalRating } from '../data/reviews'
-import { blendReviews, PRIOR_WEIGHT, reviewBreakdown, starsToScore, withExternalReviews } from './reviews'
+import { blendReviews, effectiveCount, PRIOR_WEIGHT, reviewBreakdown, starsToScore, withExternalReviews } from './reviews'
 
 const yelp = (stars: number, count: number, match: 'exact' | 'likely' = 'exact'): ExternalRating => ({
   site: 'yelp',
@@ -11,10 +11,17 @@ const yelp = (stars: number, count: number, match: 'exact' | 'likely' = 'exact')
   match,
 })
 
+const URL_PATTERN = {
+  yelp: /^https:\/\/(www\.)?yelp\.com\//,
+  klook: /^https:\/\/www\.klook\.com\//,
+  tripadvisor: /^https:\/\/www\.tripadvisor\.com\/Restaurant_Review-g298574-d\d+-/,
+}
+
 describe('starsToScore', () => {
   it('maps each site’s typical rating to 6 and clamps to 0–10', () => {
     expect(starsToScore('yelp', 3.8)).toBeCloseTo(6)
     expect(starsToScore('klook', 4.6)).toBeCloseTo(6)
+    expect(starsToScore('tripadvisor', 4.0)).toBeCloseTo(6)
     expect(starsToScore('yelp', 4.3)).toBeCloseTo(8)
     expect(starsToScore('yelp', 1)).toBe(0)
     expect(starsToScore('yelp', 5)).toBe(10)
@@ -31,9 +38,9 @@ describe('blendReviews', () => {
   })
 
   it('treats the estimate as PRIOR_WEIGHT reviews', () => {
-    // PRIOR_WEIGHT reviews at a score of 2 should land halfway between 8 and 2.
+    // PRIOR_WEIGHT recent reviews at a score of 2 should land halfway between 8 and 2.
     const stars = 3.8 + (2 - 6) / 4
-    expect(blendReviews(8, [yelp(stars, PRIOR_WEIGHT)])).toBeCloseTo(5)
+    expect(blendReviews(8, [{ ...yelp(stars, PRIOR_WEIGHT), era: 'recent' }])).toBeCloseTo(5)
   })
 
   it('moves further with more reviews', () => {
@@ -45,6 +52,15 @@ describe('blendReviews', () => {
 
   it('counts a likely match at half weight', () => {
     expect(blendReviews(8, [yelp(2.8, 10, 'likely')])).toBeCloseTo(blendReviews(8, [yelp(2.8, 5)]))
+  })
+
+  it('weights recent reviews over old ones', () => {
+    const recent = blendReviews(8, [{ ...yelp(2.8, 20), era: 'recent' }])
+    const unknown = blendReviews(8, [yelp(2.8, 20)])
+    const older = blendReviews(8, [{ ...yelp(2.8, 20), era: 'older' }])
+    expect(recent).toBeLessThan(unknown)
+    expect(unknown).toBeLessThan(older)
+    expect(effectiveCount({ ...yelp(1, 10), era: 'older' })).toBeCloseTo(4)
   })
 })
 
@@ -62,7 +78,7 @@ describe('external ratings data', () => {
         expect(r.stars, id).toBeGreaterThanOrEqual(1)
         expect(r.stars, id).toBeLessThanOrEqual(5)
         expect(r.count, id).toBeGreaterThanOrEqual(1)
-        expect(r.url, id).toMatch(r.site === 'yelp' ? /^https:\/\/(www\.)?yelp\.com\// : /^https:\/\/www\.klook\.com\//)
+        expect(r.url, id).toMatch(URL_PATTERN[r.site])
       }
     }
   })

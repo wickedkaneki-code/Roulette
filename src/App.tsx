@@ -210,16 +210,17 @@ export default function App() {
         <h3>How the odds work</h3>
         <p>
           Each place has three scores from 0 to 10. <strong>Reviews</strong> starts as an estimate from diner
-          ratings and food-media coverage. For the {RATED_COUNT} places with their own SM North listing on Yelp or
-          Klook, those star ratings are blended in: a rating at the site’s typical average counts as 6, and the more
-          reviews behind it, the more it outweighs the estimate. <strong>Aesthetic</strong> rates the room and how photogenic it is.{' '}
+          ratings and food-media coverage. For the {RATED_COUNT} places with their own SM North listing on
+          Tripadvisor, Yelp or Klook, those star ratings are blended in: a rating at the site’s typical average counts
+          as 6, and the more reviews behind it, the more it outweighs the estimate. Reviews written mostly before 2020
+          count for less. <strong>Aesthetic</strong> rates the room and how photogenic it is.{' '}
           <strong>Notoriety</strong> covers brand fame, awards such as the 2026 MICHELIN Guide Philippines, and
           first-in-the-Philippines hype. Your sliders blend them into one weighted score, and a place’s slice is
           proportional to (score ÷ 10) raised to the favoritism power. At ×0 every slice is equal.
         </p>
         <p>
           The list of places comes from SM Supermalls’ official SM City North EDSA directory (checked 15 Oct 2026),
-          plus openings reported through October 2026. Yelp and Klook ratings were captured on {REVIEWS_CAPTURED}.
+          plus openings reported through October 2026. Tripadvisor, Yelp and Klook ratings were captured on {REVIEWS_CAPTURED}.
           The remaining scores are researched estimates, not live ratings, and mall
           tenants change often, so check a place is open before you go.
         </p>

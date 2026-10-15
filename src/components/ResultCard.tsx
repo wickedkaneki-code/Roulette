@@ -63,7 +63,9 @@ export function ResultCard({ entry, ticket, blended, onSpinAgain, onVeto }: Prop
         <section className="slip-reviews" aria-label="What reviewers say">
           <h3>What reviewers say</h3>
           {reviews.ratings.length === 0 ? (
-            <p className="fine">No Yelp or Klook listing found for this branch, so the reviews score is an estimate.</p>
+            <p className="fine">
+              No Tripadvisor, Yelp or Klook listing found for this branch, so the reviews score is an estimate.
+            </p>
           ) : (
             <>
               <ul>
@@ -75,7 +77,9 @@ export function ResultCard({ entry, ticket, blended, onSpinAgain, onVeto }: Prop
                       </span>{' '}
                       <span className="fine">
                         {r.count} {r.count === 1 ? 'review' : 'reviews'}
-                        {r.match === 'likely' && ' · nearby listing'}
+                        {r.era === 'recent' && ' · mostly 2023–26'}
+                        {r.era === 'older' && ' · mostly pre-2020'}
+                        {r.match === 'likely' && ' · branch not confirmed'}
                       </span>
                     </a>
                     {r.note && <span className="rating-note">{r.note}</span>}

@@ -8,8 +8,8 @@ matters.
   merged across branches, plus 2025–2026 openings from SM and press coverage (BHC Chicken's first PH store,
   Candid Coffee, Café Barbera Mini, Pizza Planet, King's Feast buffet, Milksha's concept store and more).
 - **Three scores per place, 0–10**: reviews, aesthetic and notoriety.
-- **Real Yelp and Klook star ratings** for the 20 places that have their own SM North listing, blended into the
-  reviews score (toggle in the app), with links and reviewer notes on the result card.
+- **Real Tripadvisor, Yelp and Klook ratings** for the 30 places that have their own SM North listing,
+  blended into the reviews score (toggle in the app), with links and reviewer notes on the result card.
 - **Sliders** for how much each factor counts, plus a favoritism dial from pure luck to top picks only.
 - **Filters** for category (restaurants, buffets, fast food, cafés, desserts, drinks, kiosks), building, budget
   and announced-but-unconfirmed openings.
@@ -73,31 +73,46 @@ is a cinema concession.
 Mall tenants change often, so check that a place is open before you go. This is a fan-made tool and is not
 affiliated with SM Supermalls or any restaurant listed.
 
-## Yelp and Klook ratings
+## Review-site ratings
 
-[`src/data/reviews.ts`](src/data/reviews.ts) holds star ratings and review counts captured on 2026-10-15:
-20 Yelp listings across 18 places and 3 Klook listings (Vikings, Tong Yang, Bistro Remedios). Both sites block
-direct fetching, so the numbers were read from their search-indexed pages.
+[`src/data/reviews.ts`](src/data/reviews.ts) holds star ratings and review counts for 30 places, captured on
+2026-10-15. All three sites block direct fetching, so the numbers were read from their search-indexed pages.
+
+| Site | Listings | Biggest samples |
+| --- | --- | --- |
+| Tripadvisor | 20 across 19 places | Vikings 4.4★ (910), Tong Yang 4.9★ (817), Yabu 4.3★ (168), Lugang 3.7★ (59), Tim Ho Wan 3.8★ (58) |
+| Yelp | 20 across 18 places | Vikings 3.5★ (20), Tim Ho Wan 4.0★ (18), Yabu 4.3★ (13), Conti's 4.0★ (12) |
+| Klook | 3 | Vikings 4.7★ (41), Tong Yang 4.4★ (5), Bistro Remedios 5.0★ (5) |
+
+How they feed the reviews score:
 
 - Only branch-level SM North listings are used; a rating from another branch of the same chain is never
-  borrowed. Big names without their own SM North page (Din Tai Fung, Shake Shack, Mary Grace, Mesa, Chili's)
-  keep their estimate.
-- `match: 'likely'` marks a listing Yelp places about 0.1–0.3 mi from the mall with no branch page to confirm
-  it (Tim Ho Wan, Gerry's, Kumori, Bistro Remedios on Klook). Those count at half weight.
-- Sites rate on different curves, so each has a baseline (Yelp 3.8★, Klook 4.6★). A rating at the baseline
-  maps to 6/10, and each star above or below moves it 4 points.
-- The estimate counts as 15 reviews, so `blended = (estimate × 15 + Σ score × reviews) / (15 + Σ reviews)`.
-  Vikings, with 61 ratings (Klook 4.7★, Yelp 3.5★), drops from 9 to 6.5; a lone 1★ review only nudges.
+  borrowed.
+- Sites rate on different curves, so each has a baseline (Klook 4.6★, Tripadvisor 4.0★, Yelp 3.8★). A rating
+  at the baseline maps to 6/10, and each star above or below moves it 4 points.
+- Each listing counts as its number of reviews, discounted when:
+  - the branch is only a likely match (`match: 'likely'`, half weight), or
+  - most reviews are old (`era: 'older'`, mostly before 2020, 40% weight; unknown era 75%; `'recent'`,
+    mostly 2023–2026, full weight).
+- The researched estimate counts as 15 reviews:
+  `blended = (estimate × 15 + Σ score × effective reviews) / (15 + Σ effective reviews)`.
+  Tong Yang rises from 8 to 9.5 on 817 recent Tripadvisor reviews; Vikings settles at 7.5; two bad reviews of
+  Shake Shack only move it from 8 to 7.1.
 - Notes are paraphrases of what reviewers said, not quotes.
 
-Reddit is not included. It refuses automated access from the environment this was built in, including through
-search. Most Yelp listings here have fewer than 15 reviews, so the estimate still carries real weight.
+Also tried, with nothing usable for SM North:
+
+- **Reddit, Eater, Serious Eats**: refuse automated access, including through search. Eater and Serious Eats
+  don't cover Manila restaurants anyway.
+- **OpenTable**: its "near SM North EDSA" page lists only TriNoma and other nearby restaurants.
+- **Zomato**: left the Philippines; its SM North pages are frozen around 2022 and show no review counts.
+- **MICHELIN Guide**: none of its 2026 Philippine picks are at SM North; it is used for notoriety instead.
 
 ## Project layout
 
 ```
 src/
-  data/       places.ts (venues), reviews.ts (Yelp/Klook ratings), sources.ts (citations), types.ts
+  data/       places.ts (venues), reviews.ts (review-site ratings), sources.ts (citations), types.ts
   lib/        odds.ts (scoring + weighted pick), reviews.ts (rating blend), wheel.ts (geometry + landing),
               format.ts, storage.ts
   components/ Wheel, Controls, OddsBoard, ResultCard, StatusPill

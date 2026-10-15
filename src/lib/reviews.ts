@@ -5,27 +5,30 @@ import type { Place } from '../data/types'
  * Turning star ratings into the 0–10 reviews score.
  *
  * Sites rate on different curves: Klook voucher buyers average around 4.6★,
- * Yelp reviewers around 3.8★. A rating at the site's typical average maps to
- * 6/10 (the same score a 4.0★ Google rating gets), and each star above or
- * below moves it 4 points.
+ * Tripadvisor around 4.0★ and Yelp reviewers around 3.8★. A rating at the
+ * site's typical average maps to 6/10 (the same score a 4.0★ Google rating
+ * gets), and each star above or below moves it 4 points.
  *
- * The editorial estimate acts as a prior worth PRIOR_WEIGHT reviews, so one
- * stray review nudges a place while dozens of reviews mostly decide it.
+ * Each listing counts as its number of reviews, discounted when the branch
+ * match is only likely or most reviews are old. The editorial estimate acts
+ * as a prior worth PRIOR_WEIGHT reviews, so one stray review nudges a place
+ * while hundreds of recent reviews decide it.
  */
 
-export const SITE_BASELINE: Record<ReviewSite, number> = { yelp: 3.8, klook: 4.6 }
+export const SITE_BASELINE: Record<ReviewSite, number> = { tripadvisor: 4.0, yelp: 3.8, klook: 4.6 }
 export const POINTS_PER_STAR = 4
 export const PRIOR_WEIGHT = 15
 const LIKELY_MATCH_FACTOR = 0.5
+const ERA_FACTOR = { recent: 1, unknown: 0.75, older: 0.4 }
 
-export const SITE_LABELS: Record<ReviewSite, string> = { yelp: 'Yelp', klook: 'Klook' }
+export const SITE_LABELS: Record<ReviewSite, string> = { tripadvisor: 'Tripadvisor', yelp: 'Yelp', klook: 'Klook' }
 
 export function starsToScore(site: ReviewSite, stars: number): number {
   return Math.min(10, Math.max(0, 6 + (stars - SITE_BASELINE[site]) * POINTS_PER_STAR))
 }
 
 export function effectiveCount(r: ExternalRating): number {
-  return r.count * (r.match === 'likely' ? LIKELY_MATCH_FACTOR : 1)
+  return r.count * (r.match === 'likely' ? LIKELY_MATCH_FACTOR : 1) * ERA_FACTOR[r.era ?? 'unknown']
 }
 
 export interface ReviewBreakdown {
