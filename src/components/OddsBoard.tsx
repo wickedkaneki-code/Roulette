@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react'
+import { EXTERNAL_RATINGS } from '../data/reviews'
 import { KIND_LABELS } from '../data/types'
 import { FACTORS, type Entry } from '../lib/odds'
 import { percent, shortLocation } from '../lib/format'
+import { SITE_LABELS } from '../lib/reviews'
 import { StatusPill } from './StatusPill'
 
 const PAGE = 30
@@ -44,8 +46,8 @@ export function OddsBoard({ odds, disabled, onVeto }: Props) {
         />
       </div>
       <p className="fine">
-        Every place on the wheel, likeliest first. The bars show reviews, aesthetic and notoriety. Veto a place to take
-        it off the wheel.
+        Every place on the wheel, likeliest first. The bars show reviews, aesthetic and notoriety; Yelp and Klook
+        badges mark places with their own SM North ratings. Veto a place to take it off the wheel.
       </p>
       <ol className="odds-list">
         {visible.map(({ e, rank }) => (
@@ -56,6 +58,11 @@ export function OddsBoard({ odds, disabled, onVeto }: Props) {
               <span className="odds-name">
                 {e.place.name}
                 {e.place.status !== 'open' && <StatusPill status={e.place.status} />}
+                {EXTERNAL_RATINGS[e.place.id]?.map((r) => (
+                  <span key={r.url + r.stars} className="pill pill-rating mono" title={`${r.count} reviews`}>
+                    {SITE_LABELS[r.site]} {r.stars.toFixed(1)}★
+                  </span>
+                ))}
               </span>
               <span className="odds-meta">
                 {e.place.cuisine} · {shortLocation(e.place.locations[0])}

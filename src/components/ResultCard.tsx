@@ -1,19 +1,26 @@
+import { PLACES } from '../data/places'
+import { REVIEWS_CAPTURED } from '../data/reviews'
 import { SOURCES } from '../data/sources'
 import { FACTOR_LABELS, KIND_LABELS } from '../data/types'
 import type { Entry } from '../lib/odds'
 import { FACTORS } from '../lib/odds'
 import { longLocation, mapsUrl, percent, priceSigns } from '../lib/format'
+import { reviewBreakdown, SITE_LABELS } from '../lib/reviews'
 import { StatusPill } from './StatusPill'
 
 interface Props {
   entry: Entry
   ticket: number
+  /** Whether the reviews score includes Yelp/Klook ratings. */
+  blended: boolean
   onSpinAgain: () => void
   onVeto: () => void
 }
 
-export function ResultCard({ entry, ticket, onSpinAgain, onVeto }: Props) {
+export function ResultCard({ entry, ticket, blended, onSpinAgain, onVeto }: Props) {
   const { place, probability, composite } = entry
+  const original = PLACES.find((p) => p.id === place.id) ?? place
+  const reviews = reviewBreakdown(original)
   return (
     <article className="slip" aria-live="polite">
       <header className="slip-head">
@@ -53,6 +60,37 @@ export function ResultCard({ entry, ticket, onSpinAgain, onVeto }: Props) {
             </div>
           ))}
         </dl>
+        <section className="slip-reviews" aria-label="What reviewers say">
+          <h3>What reviewers say</h3>
+          {reviews.ratings.length === 0 ? (
+            <p className="fine">No Yelp or Klook listing found for this branch, so the reviews score is an estimate.</p>
+          ) : (
+            <>
+              <ul>
+                {reviews.ratings.map((r) => (
+                  <li key={r.url + r.stars}>
+                    <a href={r.url} target="_blank" rel="noreferrer" className="rating-link">
+                      <span className="mono">
+                        {SITE_LABELS[r.site]} {r.stars.toFixed(1)}★
+                      </span>{' '}
+                      <span className="fine">
+                        {r.count} {r.count === 1 ? 'review' : 'reviews'}
+                        {r.match === 'likely' && ' · nearby listing'}
+                      </span>
+                    </a>
+                    {r.note && <span className="rating-note">{r.note}</span>}
+                  </li>
+                ))}
+              </ul>
+              <p className="fine">
+                {blended
+                  ? `Reviews score ${reviews.blended}/10: the researched estimate (${reviews.estimate}) blended with these ${reviews.totalReviews} ratings.`
+                  : `Blending is off, so the reviews score uses the researched estimate (${reviews.estimate}).`}{' '}
+                Captured {REVIEWS_CAPTURED}; notes paraphrase reviewers.
+              </p>
+            </>
+          )}
+        </section>
         <p className="slip-odds mono">
           Weighted score {composite.toFixed(1)} · had a {percent(probability)} chance
         </p>

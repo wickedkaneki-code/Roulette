@@ -12,6 +12,8 @@ export interface Settings {
   buildings: Building[]
   maxPrice: Price
   includeAnnounced: boolean
+  /** Blend Yelp/Klook star ratings into the reviews score where available. */
+  useExternalReviews: boolean
   /** Places the user vetoed; they never land. */
   vetoed: string[]
 }
@@ -35,6 +37,7 @@ export const DEFAULT_SETTINGS: Settings = {
   buildings: [],
   maxPrice: 4,
   includeAnnounced: false,
+  useExternalReviews: true,
   vetoed: [],
 }
 

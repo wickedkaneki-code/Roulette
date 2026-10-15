@@ -97,6 +97,16 @@ export const SOURCES = {
     url: 'https://booky.ph/blog/paris-baguette-manila/',
     date: '2024',
   },
+  yelp: {
+    label: 'Yelp — SM City North EDSA branch listings (star ratings and review counts)',
+    url: 'https://www.yelp.com/search?find_desc=Restaurants&find_loc=SM+City+North+EDSA+Annex+1+Tunnel%2C+Quezon+City%2C+Metro+Manila',
+    date: 'Captured 2026-10-15',
+  },
+  klook: {
+    label: 'Klook — SM North EDSA food & dining listings',
+    url: 'https://www.klook.com/en-US/destination/p50047021-sm-north-edsa/2-food-and-dining/',
+    date: 'Captured 2026-10-15',
+  },
   pedal: {
     label: 'Pedal Cafe – SM North (official Facebook page)',
     url: 'https://www.facebook.com/pedalcafeph.smnorth/',

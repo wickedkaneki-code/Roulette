@@ -934,3 +934,51 @@ input[type='search'] {
 .sources a {
   overflow-wrap: anywhere;
 }
+
+/* ───────── Review ratings ───────── */
+
+.slip-reviews {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
+.slip-reviews h3 {
+  font-size: var(--step--1);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.slip-reviews ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.slip-reviews li {
+  display: grid;
+  gap: 2px;
+}
+
+.rating-link {
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration-color: var(--line);
+}
+
+.rating-note {
+  font-size: var(--step--1);
+}
+
+.pill-rating {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-weight: 600;
+}

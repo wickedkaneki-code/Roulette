@@ -4,7 +4,7 @@ import { DEFAULT_SETTINGS, FACTORS, spread, topShare, type Entry, type Settings,
 import { percent } from '../lib/format'
 
 const FACTOR_HINTS: Record<Factor, string> = {
-  reviews: 'Google, Tripadvisor and Yelp sentiment',
+  reviews: 'Diner ratings, incl. Yelp and Klook',
   aesthetic: 'Interiors, ambience, photo-worthiness',
   notoriety: 'Brand fame, awards, hype, first-in-PH',
 }
@@ -33,11 +33,12 @@ interface Props {
   odds: Entry[]
   kindCounts: Record<Kind, number>
   announcedCount: number
+  ratedCount: number
   disabled: boolean
   onChange: (next: Settings) => void
 }
 
-export function Controls({ settings, odds, kindCounts, announcedCount, disabled, onChange }: Props) {
+export function Controls({ settings, odds, kindCounts, announcedCount, ratedCount, disabled, onChange }: Props) {
   const set = (patch: Partial<Settings>) => onChange({ ...settings, ...patch })
   const totalWeight = FACTORS.reduce((s, f) => s + settings.weights[f], 0)
   const activePreset = PRESETS.find(
@@ -85,6 +86,15 @@ export function Controls({ settings, odds, kindCounts, announcedCount, disabled,
             </output>
           </div>
         ))}
+        <label className="switch" htmlFor="external">
+          <input
+            id="external"
+            type="checkbox"
+            checked={settings.useExternalReviews}
+            onChange={(e) => set({ useExternalReviews: e.target.checked })}
+          />
+          <span>Blend in real Yelp &amp; Klook star ratings ({ratedCount} places)</span>
+        </label>
         <div className="slider-row">
           <label htmlFor="favoritism">
             <span className="slider-name">Favoritism</span>

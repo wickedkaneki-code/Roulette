@@ -5,10 +5,12 @@ import { OddsBoard } from './components/OddsBoard'
 import { ResultCard } from './components/ResultCard'
 import { Wheel } from './components/Wheel'
 import { PLACES } from './data/places'
+import { EXTERNAL_RATINGS, REVIEWS_CAPTURED } from './data/reviews'
 import { SOURCES } from './data/sources'
 import type { Kind } from './data/types'
 import { buildSlices, percent, shortLocation } from './lib/format'
 import { computeOdds, DEFAULT_SETTINGS, secureRandom, weightedPick, type Entry, type Settings } from './lib/odds'
+import { withExternalReviews } from './lib/reviews'
 import { load, save } from './lib/storage'
 import { landingAngle, rotationToLand } from './lib/wheel'
 
@@ -32,6 +34,9 @@ const KIND_COUNTS = PLACES.reduce(
 )
 const ANNOUNCED = PLACES.filter((p) => p.status === 'announced').length
 const NEW_COUNT = PLACES.filter((p) => p.status === 'new').length
+const BLENDED_PLACES = withExternalReviews(PLACES)
+const RATED_COUNT = Object.keys(EXTERNAL_RATINGS).length
+const placesFor = (s: Settings) => (s.useExternalReviews ? BLENDED_PLACES : PLACES)
 
 export default function App() {
   const [settings, setSettings] = useState<Settings>(() => load(SETTINGS_KEY, DEFAULT_SETTINGS))
@@ -48,7 +53,7 @@ export default function App() {
   useEffect(() => save(SETTINGS_KEY, settings), [settings])
   useEffect(() => save(HISTORY_KEY, { items: history }), [history])
 
-  const odds = useMemo(() => computeOdds(PLACES, settings), [settings])
+  const odds = useMemo(() => computeOdds(placesFor(settings), settings), [settings])
   const wheelEntries = frozen ?? odds
   const slices = useMemo(() => buildSlices(wheelEntries), [wheelEntries])
 
@@ -114,7 +119,7 @@ export default function App() {
     if (!result) return
     const next = { ...settings, vetoed: [...settings.vetoed, result.place.id] }
     setSettings(next)
-    spinWith(computeOdds(PLACES, next))
+    spinWith(computeOdds(placesFor(next), next))
   }
 
   useEffect(() => () => window.clearTimeout(settleTimer.current), [])
@@ -156,7 +161,13 @@ export default function App() {
           )}
 
           {result && !spinning && (
-            <ResultCard entry={result} ticket={ticket} onSpinAgain={spin} onVeto={vetoAndRespin} />
+            <ResultCard
+              entry={result}
+              ticket={ticket}
+              blended={settings.useExternalReviews}
+              onSpinAgain={spin}
+              onVeto={vetoAndRespin}
+            />
           )}
 
           {history.length > 0 && (
@@ -187,6 +198,7 @@ export default function App() {
             odds={odds}
             kindCounts={KIND_COUNTS}
             announcedCount={ANNOUNCED}
+            ratedCount={RATED_COUNT}
             disabled={spinning}
             onChange={setSettings}
           />
@@ -197,15 +209,18 @@ export default function App() {
       <footer className="method">
         <h3>How the odds work</h3>
         <p>
-          Each place has three scores from 0 to 10. <strong>Reviews</strong> reflects diner ratings on Google,
-          Tripadvisor and Yelp. <strong>Aesthetic</strong> rates the room and how photogenic it is.{' '}
+          Each place has three scores from 0 to 10. <strong>Reviews</strong> starts as an estimate from diner
+          ratings and food-media coverage. For the {RATED_COUNT} places with their own SM North listing on Yelp or
+          Klook, those star ratings are blended in: a rating at the site’s typical average counts as 6, and the more
+          reviews behind it, the more it outweighs the estimate. <strong>Aesthetic</strong> rates the room and how photogenic it is.{' '}
           <strong>Notoriety</strong> covers brand fame, awards such as the 2026 MICHELIN Guide Philippines, and
           first-in-the-Philippines hype. Your sliders blend them into one weighted score, and a place’s slice is
           proportional to (score ÷ 10) raised to the favoritism power. At ×0 every slice is equal.
         </p>
         <p>
           The list of places comes from SM Supermalls’ official SM City North EDSA directory (checked 15 Oct 2026),
-          plus openings reported through October 2026. Scores are researched estimates, not live ratings, and mall
+          plus openings reported through October 2026. Yelp and Klook ratings were captured on {REVIEWS_CAPTURED}.
+          The remaining scores are researched estimates, not live ratings, and mall
           tenants change often, so check a place is open before you go.
         </p>
         <h4>Sources</h4>
